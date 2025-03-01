@@ -10,42 +10,182 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ユーザーモデル
 model User {
-  id        String     @id @default(uuid())
-  email     String     @unique
-  name      String
-  documents Document[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id           Int      @id @default(autoincrement())
+  username     String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // リレーション
+  documents        Document[]
+  documentChanges  DocumentChange[]
+  directories      Directory[]
+  directoryChanges DirectoryChange[]
+  directoryMoves   DirectoryMove[]
+
+  @@map("users")
 }
 
+// ドキュメントモデル
 model Document {
-  id         String    @id @default(uuid())
-  title      String
-  content    String    @db.Text
-  author     User      @relation(fields: [authorId], references: [id])
-  authorId   String
-  category   Category? @relation(fields: [categoryId], references: [id])
-  categoryId String?
-  tags       Tag[]
-  isPublic   Boolean   @default(false)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id        Int      @id @default(autoincrement())
+  createdBy Int      @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // リレーション
+  user           User                    @relation(fields: [createdBy], references: [id])
+  versions       DocumentVersion[]
+  currentVersion CurrentDocumentVersion?
+  changes        DocumentChange[]
+
+  @@map("documents")
 }
 
-model Category {
-  id          String     @id @default(uuid())
-  name        String     @unique
-  description String?
-  documents   Document[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+// ドキュメントバージョンモデル
+model DocumentVersion {
+  id               Int      @id @default(autoincrement())
+  documentId       Int      @map("document_id")
+  name             String
+  content          String
+  documentChangeId Int      @map("document_change_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  // リレーション
+  document        Document                @relation(fields: [documentId], references: [id])
+  currentVersion  CurrentDocumentVersion?
+  documentChanges DocumentChange[]
+
+  @@map("document_versions")
 }
 
-model Tag {
-  id        String     @id @default(uuid())
-  name      String     @unique
-  documents Document[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+// 現在のドキュメントバージョンモデル
+model CurrentDocumentVersion {
+  documentId Int      @id @map("document_id")
+  versionId  Int      @unique @map("version_id")
+  appliedAt  DateTime @updatedAt @map("applied_at")
+
+  // リレーション
+  document Document        @relation(fields: [documentId], references: [id])
+  version  DocumentVersion @relation(fields: [versionId], references: [id])
+
+  @@map("current_document_versions")
+}
+
+// ドキュメント変更履歴モデル
+model DocumentChange {
+  id         Int      @id @default(autoincrement())
+  documentId Int      @map("document_id")
+  changeType String   @map("change_type")
+  changedBy  Int      @map("changed_by")
+  changedAt  DateTime @default(now()) @map("changed_at")
+
+  // リレーション
+  document          Document         @relation(fields: [documentId], references: [id])
+  user              User             @relation(fields: [changedBy], references: [id])
+  DocumentVersion   DocumentVersion? @relation(fields: [documentVersionId], references: [id])
+  documentVersionId Int?
+
+  @@map("document_changes")
+}
+
+// ディレクトリモデル
+model Directory {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdBy Int      @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // リレーション
+  user             User                     @relation(fields: [createdBy], references: [id])
+  versions         DirectoryVersion[]
+  currentVersion   CurrentDirectoryVersion?
+  changes          DirectoryChange[]
+  ancestors        DirectoryHierarchy[]     @relation("ancestor")
+  descendants      DirectoryHierarchy[]     @relation("descendant")
+  oldParentMoves   DirectoryMove[]          @relation("oldParent")
+  newParentMoves   DirectoryMove[]          @relation("newParent")
+  movedDirectories DirectoryMove[]          @relation("movedDirectory")
+
+  @@map("directories")
+}
+
+// ディレクトリバージョンモデル
+model DirectoryVersion {
+  id                Int      @id @default(autoincrement())
+  directoryId       Int      @map("directory_id")
+  name              String
+  directoryChangeId Int      @map("directory_change_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  // リレーション
+  directory        Directory                @relation(fields: [directoryId], references: [id])
+  currentVersion   CurrentDirectoryVersion?
+  directoryChanges DirectoryChange[]
+
+  @@map("directory_versions")
+}
+
+// 現在のディレクトリバージョンモデル
+model CurrentDirectoryVersion {
+  directoryId Int      @id @map("directory_id")
+  versionId   Int      @unique @map("version_id")
+  appliedAt   DateTime @updatedAt @map("applied_at")
+
+  // リレーション
+  directory Directory        @relation(fields: [directoryId], references: [id])
+  version   DirectoryVersion @relation(fields: [versionId], references: [id])
+
+  @@map("current_directory_versions")
+}
+
+// ディレクトリ変更履歴モデル
+model DirectoryChange {
+  id          Int      @id @default(autoincrement())
+  directoryId Int      @map("directory_id")
+  versionId   Int      @map("version_id")
+  changeType  String   @map("change_type")
+  changedBy   Int      @map("changed_by")
+  changedAt   DateTime @default(now()) @map("changed_at")
+
+  // リレーション
+  directory Directory        @relation(fields: [directoryId], references: [id])
+  version   DirectoryVersion @relation(fields: [versionId], references: [id])
+  user      User             @relation(fields: [changedBy], references: [id])
+
+  @@map("directory_changes")
+}
+
+// ディレクトリの階層構造モデル（閉包テーブル）
+model DirectoryHierarchy {
+  ancestorId   Int      @map("ancestor_id")
+  descendantId Int      @map("descendant_id")
+  depth        Int
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // リレーション
+  ancestor   Directory @relation("ancestor", fields: [ancestorId], references: [id])
+  descendant Directory @relation("descendant", fields: [descendantId], references: [id])
+
+  @@id([ancestorId, descendantId])
+  @@map("directory_hierarchy")
+}
+
+// ディレクトリ移動モデル
+model DirectoryMove {
+  id                Int      @id @default(autoincrement())
+  targetDirectoryId Int      @map("target_directory_id")
+  fromDirectoryId   Int      @map("from_parent_id")
+  toDirectoryId     Int      @map("to_parent_id")
+  movedBy           Int      @map("moved_by")
+  movedAt           DateTime @default(now()) @map("moved_at")
+
+  // リレーション
+  targetDirectory Directory @relation("movedDirectory", fields: [targetDirectoryId], references: [id])
+  oldParent       Directory @relation("oldParent", fields: [fromDirectoryId], references: [id])
+  newParent       Directory @relation("newParent", fields: [toDirectoryId], references: [id])
+  user            User      @relation(fields: [movedBy], references: [id])
+
+  @@map("directory_moves")
 }
