@@ -5,18 +5,9 @@ import CreateDocumentForm from "@/app/documents/components/CreateDocumentForm";
 
 interface Document {
   id: string;
-  title: string;
+  name: string;
   content: string;
-  isPublic: boolean;
   createdAt: string;
-  author: {
-    name: string;
-    email: string;
-  };
-  category?: {
-    name: string;
-  };
-  tags: Array<{ name: string }>;
 }
 
 export default function DocumentsPage() {
@@ -33,6 +24,7 @@ export default function DocumentsPage() {
     try {
       const response = await fetch("/api/documents");
       const data = await response.json();
+      console.log(data);
       setDocuments(data);
     } catch (err) {
       setError("Failed to fetch documents");
@@ -79,28 +71,8 @@ export default function DocumentsPage() {
             key={doc.id}
             className="border rounded-lg p-4 hover:shadow-lg transition-shadow"
           >
-            <h2 className="text-xl font-semibold">{doc.title}</h2>
-            <p className="text-gray-600 mt-2">
-              {doc.content.length > 100
-                ? `${doc.content.substring(0, 100)}...`
-                : doc.content}
-            </p>
-            <div className="mt-4 text-sm text-gray-500">
-              <p>Author: {doc.author.name}</p>
-              {doc.category && <p>Category: {doc.category.name}</p>}
-              {doc.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {doc.tags.map((tag) => (
-                    <span
-                      key={tag.name}
-                      className="bg-gray-200 px-2 py-1 rounded-full text-xs"
-                    >
-                      {tag.name}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
+            <h2 className="text-xl font-semibold">{doc.name}</h2>
+            {}
           </div>
         ))}
       </div>
