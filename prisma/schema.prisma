@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -19,11 +16,12 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
 
   // リレーション
-  documents        Document[]
-  documentChanges  DocumentChange[]
-  directories      Directory[]
-  directoryChanges DirectoryChange[]
-  directoryMoves   DirectoryMove[]
+  documents          Document[]
+  documentChanges    DocumentChange[]
+  directories        Directory[]
+  directoryChanges   DirectoryChange[]
+  directoryHierarchy DirectoryHierarchy[]
+  directoryMoves     DirectoryMove[]
 
   @@map("users")
 }
@@ -39,23 +37,26 @@ model Document {
   versions       DocumentVersion[]
   currentVersion CurrentDocumentVersion?
   changes        DocumentChange[]
+  order          DocumentOrder?
 
   @@map("documents")
 }
 
 // ドキュメントバージョンモデル
 model DocumentVersion {
-  id               Int      @id @default(autoincrement())
-  documentId       Int      @map("document_id")
-  name             String
-  content          String
-  documentChangeId Int      @map("document_change_id")
-  createdAt        DateTime @default(now()) @map("created_at")
+  id                Int      @id @default(autoincrement())
+  documentId        Int      @map("document_id")
+  name              String
+  content           String
+  parentDirectoryId Int      @map("parent_directory_id")
+  documentChangeId  Int      @map("document_change_id")
+  createdAt         DateTime @default(now()) @map("created_at")
 
   // リレーション
   document        Document                @relation(fields: [documentId], references: [id])
   currentVersion  CurrentDocumentVersion?
-  documentChanges DocumentChange[]
+  parentDirectory Directory               @relation(fields: [parentDirectoryId], references: [id])
+  documentChanges DocumentChange[]        @relation("DocumentVersionChanges")
 
   @@map("document_versions")
 }
@@ -84,10 +85,22 @@ model DocumentChange {
   // リレーション
   document          Document         @relation(fields: [documentId], references: [id])
   user              User             @relation(fields: [changedBy], references: [id])
-  DocumentVersion   DocumentVersion? @relation(fields: [documentVersionId], references: [id])
+  documentVersion   DocumentVersion? @relation("DocumentVersionChanges", fields: [documentVersionId], references: [id])
   documentVersionId Int?
 
   @@map("document_changes")
+}
+
+// ドキュメントの順序管理モデル
+model DocumentOrder {
+  documentId Int      @id @map("document_id")
+  orderValue String   @map("order_value")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  // リレーション
+  document Document @relation(fields: [documentId], references: [id])
+
+  @@map("document_orders")
 }
 
 // ディレクトリモデル
@@ -98,15 +111,16 @@ model Directory {
   createdAt DateTime @default(now()) @map("created_at")
 
   // リレーション
-  user             User                     @relation(fields: [createdBy], references: [id])
-  versions         DirectoryVersion[]
-  currentVersion   CurrentDirectoryVersion?
-  changes          DirectoryChange[]
-  ancestors        DirectoryHierarchy[]     @relation("ancestor")
-  descendants      DirectoryHierarchy[]     @relation("descendant")
-  oldParentMoves   DirectoryMove[]          @relation("oldParent")
-  newParentMoves   DirectoryMove[]          @relation("newParent")
-  movedDirectories DirectoryMove[]          @relation("movedDirectory")
+  user           User                     @relation(fields: [createdBy], references: [id])
+  versions       DirectoryVersion[]
+  currentVersion CurrentDirectoryVersion?
+  changes        DirectoryChange[]
+  ancestors      DirectoryHierarchy[]     @relation("ancestor")
+  descendants    DirectoryHierarchy[]     @relation("descendant")
+  fromMoves      DirectoryMove[]          @relation("fromDirectory")
+  toMoves        DirectoryMove[]          @relation("toDirectory")
+  targetMoves    DirectoryMove[]          @relation("targetDirectory")
+  documents      DocumentVersion[]
 
   @@map("directories")
 }
@@ -167,6 +181,8 @@ model DirectoryHierarchy {
   // リレーション
   ancestor   Directory @relation("ancestor", fields: [ancestorId], references: [id])
   descendant Directory @relation("descendant", fields: [descendantId], references: [id])
+  user       User?     @relation(fields: [createdBy], references: [id])
+  createdBy  Int?      @map("created_by")
 
   @@id([ancestorId, descendantId])
   @@map("directory_hierarchy")
@@ -176,15 +192,15 @@ model DirectoryHierarchy {
 model DirectoryMove {
   id                Int      @id @default(autoincrement())
   targetDirectoryId Int      @map("target_directory_id")
-  fromDirectoryId   Int      @map("from_parent_id")
-  toDirectoryId     Int      @map("to_parent_id")
+  fromDirectoryId   Int      @map("from_directory_id")
+  toDirectoryId     Int      @map("to_directory_id")
   movedBy           Int      @map("moved_by")
   movedAt           DateTime @default(now()) @map("moved_at")
 
   // リレーション
-  targetDirectory Directory @relation("movedDirectory", fields: [targetDirectoryId], references: [id])
-  oldParent       Directory @relation("oldParent", fields: [fromDirectoryId], references: [id])
-  newParent       Directory @relation("newParent", fields: [toDirectoryId], references: [id])
+  targetDirectory Directory @relation("targetDirectory", fields: [targetDirectoryId], references: [id])
+  fromDirectory   Directory @relation("fromDirectory", fields: [fromDirectoryId], references: [id])
+  toDirectory     Directory @relation("toDirectory", fields: [toDirectoryId], references: [id])
   user            User      @relation(fields: [movedBy], references: [id])
 
   @@map("directory_moves")

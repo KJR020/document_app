@@ -24,6 +24,7 @@ CREATE TABLE "document_versions" (
     "document_id" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
     "content" TEXT NOT NULL,
+    "parent_directory_id" INTEGER NOT NULL,
     "document_change_id" INTEGER NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -49,6 +50,15 @@ CREATE TABLE "document_changes" (
     "documentVersionId" INTEGER,
 
     CONSTRAINT "document_changes_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "document_orders" (
+    "document_id" INTEGER NOT NULL,
+    "order_value" TEXT NOT NULL,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "document_orders_pkey" PRIMARY KEY ("document_id")
 );
 
 -- CreateTable
@@ -99,6 +109,7 @@ CREATE TABLE "directory_hierarchy" (
     "descendant_id" INTEGER NOT NULL,
     "depth" INTEGER NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "created_by" INTEGER,
 
     CONSTRAINT "directory_hierarchy_pkey" PRIMARY KEY ("ancestor_id","descendant_id")
 );
@@ -107,8 +118,8 @@ CREATE TABLE "directory_hierarchy" (
 CREATE TABLE "directory_moves" (
     "id" SERIAL NOT NULL,
     "target_directory_id" INTEGER NOT NULL,
-    "from_parent_id" INTEGER NOT NULL,
-    "to_parent_id" INTEGER NOT NULL,
+    "from_directory_id" INTEGER NOT NULL,
+    "to_directory_id" INTEGER NOT NULL,
     "moved_by" INTEGER NOT NULL,
     "moved_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -131,6 +142,9 @@ ALTER TABLE "documents" ADD CONSTRAINT "documents_created_by_fkey" FOREIGN KEY (
 ALTER TABLE "document_versions" ADD CONSTRAINT "document_versions_document_id_fkey" FOREIGN KEY ("document_id") REFERENCES "documents"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "document_versions" ADD CONSTRAINT "document_versions_parent_directory_id_fkey" FOREIGN KEY ("parent_directory_id") REFERENCES "directories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "current_document_versions" ADD CONSTRAINT "current_document_versions_document_id_fkey" FOREIGN KEY ("document_id") REFERENCES "documents"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -144,6 +158,9 @@ ALTER TABLE "document_changes" ADD CONSTRAINT "document_changes_changed_by_fkey"
 
 -- AddForeignKey
 ALTER TABLE "document_changes" ADD CONSTRAINT "document_changes_documentVersionId_fkey" FOREIGN KEY ("documentVersionId") REFERENCES "document_versions"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "document_orders" ADD CONSTRAINT "document_orders_document_id_fkey" FOREIGN KEY ("document_id") REFERENCES "documents"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "directories" ADD CONSTRAINT "directories_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -173,13 +190,16 @@ ALTER TABLE "directory_hierarchy" ADD CONSTRAINT "directory_hierarchy_ancestor_i
 ALTER TABLE "directory_hierarchy" ADD CONSTRAINT "directory_hierarchy_descendant_id_fkey" FOREIGN KEY ("descendant_id") REFERENCES "directories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "directory_hierarchy" ADD CONSTRAINT "directory_hierarchy_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "directory_moves" ADD CONSTRAINT "directory_moves_target_directory_id_fkey" FOREIGN KEY ("target_directory_id") REFERENCES "directories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "directory_moves" ADD CONSTRAINT "directory_moves_from_parent_id_fkey" FOREIGN KEY ("from_parent_id") REFERENCES "directories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "directory_moves" ADD CONSTRAINT "directory_moves_from_directory_id_fkey" FOREIGN KEY ("from_directory_id") REFERENCES "directories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "directory_moves" ADD CONSTRAINT "directory_moves_to_parent_id_fkey" FOREIGN KEY ("to_parent_id") REFERENCES "directories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "directory_moves" ADD CONSTRAINT "directory_moves_to_directory_id_fkey" FOREIGN KEY ("to_directory_id") REFERENCES "directories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "directory_moves" ADD CONSTRAINT "directory_moves_moved_by_fkey" FOREIGN KEY ("moved_by") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
