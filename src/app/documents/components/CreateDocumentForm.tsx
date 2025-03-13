@@ -1,26 +1,22 @@
-"use client";
-
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface CreateDocumentFormProps {
-  onDocumentCreated: () => void;
+  selectedDirectoryId: number | null;
 }
 
-export default function CreateDocumentForm({
-  onDocumentCreated,
+export function CreateDocumentForm({
+  selectedDirectoryId,
 }: CreateDocumentFormProps) {
-  const [formData, setFormData] = useState({
+  const router = useRouter();
+  const [isCreating, setIsCreating] = useState(false);
+  const [form, setForm] = useState({
     name: "",
     content: "",
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
-
     try {
       const response = await fetch("/api/documents", {
         method: "POST",
@@ -28,8 +24,8 @@ export default function CreateDocumentForm({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          ...formData,
-          createdBy: "4945ca06-0e1e-4557-935d-896d0b79eab5",
+          ...form,
+          directoryId: selectedDirectoryId,
         }),
       });
 
@@ -37,66 +33,65 @@ export default function CreateDocumentForm({
         throw new Error("Failed to create document");
       }
 
-      setFormData({
-        name: "",
-        content: "",
-      });
-      onDocumentCreated();
-    } catch (err) {
-      setError("Failed to create document. Please try again.");
-      console.error("Error creating document:", err);
-    } finally {
-      setIsSubmitting(false);
+      setForm({ name: "", content: "" });
+      setIsCreating(false);
+      router.refresh();
+    } catch (error) {
+      console.error("Error creating document:", error);
+      alert("Failed to create document");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl mx-auto mb-8">
-      <div>
-        <label
-          htmlFor="title"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Title
-        </label>
-        <input
-          type="text"
-          id="title"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          required
-        />
-      </div>
-
-      <div>
-        <label
-          htmlFor="content"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Content
-        </label>
-        <textarea
-          id="content"
-          value={formData.content}
-          onChange={(e) =>
-            setFormData({ ...formData, content: e.target.value })
-          }
-          rows={4}
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-700"
-          required
-        />
-      </div>
-
-      {error && <p className="text-red-500 text-sm">{error}</p>}
-
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400"
-      >
-        {isSubmitting ? "Creating..." : "Create Document"}
+    <>
+      <button className="btn btn-primary" onClick={() => setIsCreating(true)}>
+        Create Document
       </button>
-    </form>
+
+      <dialog className={`modal ${isCreating ? "modal-open" : ""}`}>
+        <div className="modal-box bg-base-100">
+          <h3 className="mb-4 text-lg font-bold text-neutral">
+            Create Document
+          </h3>
+          <form onSubmit={handleSubmit}>
+            <fieldset className="fieldset">
+              <legend className="fieldset-legend">Title</legend>
+              <input
+                type="text"
+                className="input w-full border-4 border-gray-500"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                required
+              />
+            </fieldset>
+            <fieldset className="fieldset">
+              <legend className="fieldset-legend">Content</legend>
+              <textarea
+                className="textarea h-80 w-full border-4 border-gray-500"
+                value={form.content}
+                onChange={(e) => setForm({ ...form, content: e.target.value })}
+                required
+              />
+            </fieldset>
+            <div className="modal-action">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => setIsCreating(false)}
+              >
+                Cancel
+              </button>
+              <button type="submit" className="btn btn-primary">
+                Create
+              </button>
+            </div>
+          </form>
+        </div>
+        <div
+          className="bg-neutral/50 modal-backdrop"
+          onClick={() => setIsCreating(false)}
+        />
+      </dialog>
+    </>
   );
 }

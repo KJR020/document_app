@@ -1,21 +1,51 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { DocumentsApiResponse } from "@/types/document";
 
-export async function GET() {
+export async function GET(): Promise<NextResponse<DocumentsApiResponse>> {
   try {
-    const documents = await prisma.currentDocumentVersion.findMany({
+    const rawDocuments = await prisma.document.findMany({
+      where: {
+        currentVersion: {
+          isNot: null,
+        },
+      },
       include: {
-        document: true,
-        version: true,
+        currentVersion: {
+          include: {
+            version: true,
+          },
+        },
+        user: {
+          select: {
+            username: true,
+            email: true,
+          },
+        },
       },
     });
-    return NextResponse.json(documents);
+
+    const documents = rawDocuments.map((doc) => ({
+      id: doc.id,
+      createdAt: doc.createdAt,
+      createdBy: doc.createdBy,
+      name: doc.currentVersion?.version.name ?? "",
+      content: doc.currentVersion?.version.content ?? "",
+      versionId: doc.currentVersion?.version.id ?? null,
+      lastUpdatedAt: doc.currentVersion?.appliedAt ?? doc.createdAt,
+      user: {
+        username: doc.user.username,
+        email: doc.user.email,
+      },
+    }));
+
+    return NextResponse.json({ documents });
   } catch (error) {
     console.error("Failed to fetch documents:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch documents" },
-      { status: 500 }
-    );
+    const errorResponse: DocumentsApiResponse = {
+      error: "Failed to fetch documents",
+    };
+    return NextResponse.json(errorResponse, { status: 500 });
   }
 }
 
@@ -42,6 +72,7 @@ export async function POST(request: Request) {
           documentId: document.id,
           name: json.name || "",
           content: json.content || "",
+          parentDirectoryId: json.directoryId,
           documentChangeId: documentChange.id,
         },
       });

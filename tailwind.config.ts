@@ -29,7 +29,7 @@ export default {
     themes: [
       {
         light: {
-          primary: "#2563EB",
+          primary: "blue-500",
           secondary: "#64748B",
           accent: "#EFF6FF",
           neutral: "#334155",
@@ -40,7 +40,7 @@ export default {
           error: "#EF4444",
         },
         dark: {
-          primary: "#3B82F6",
+          primary: "blue-500",
           secondary: "#94A3B8",
           accent: "#1E293B",
           neutral: "#CBD5E1",
