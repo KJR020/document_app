@@ -1,7 +1,10 @@
 # Document Management Application
 
-Next.jsとPrismaを使用したドキュメント管理アプリケーション。
-データベース設計の検証を目的として簡易的な機能のみを実装。
+- Next.jsとPrismaを使用したドキュメント管理アプリケーション
+- データベース設計の検証を目的として簡易的な機能のみを実装
+- イミュータブルデータモデルを採用し、ドキュメントのバージョン管理をサポート
+
+![alt text](document/img/image.png)
 
 ## 技術スタック
 
@@ -16,8 +19,7 @@ Next.jsとPrismaを使用したドキュメント管理アプリケーション�
 
 - ドキュメントの作成、読取、更新、削除（CRUD）
 - ドキュメントの一覧表示
-- カテゴリーとタグによる分類
-- 公開/非公開設定
+- ドキュメントのバージョン管理
 
 ## セットアップ
 
@@ -67,60 +69,3 @@ pnpm prisma migrate dev
 ```bash
 pnpm dev
 ```
-
-
-## API エンドポイント
-
-### ドキュメント管理
-
-- `GET /api/documents` - ドキュメント一覧の取得
-- `POST /api/documents` - 新規ドキュメントの作成
-- `GET /api/documents/[id]` - 特定のドキュメントの取得
-- `PUT /api/documents/[id]` - ドキュメントの更新
-- `DELETE /api/documents/[id]` - ドキュメントの削除
-
-### リクエスト例
-
-新規ドキュメントの作成：
-
-```json
-POST /api/documents
-{
-  "title": "サンプルドキュメント",
-  "content": "ドキュメントの内容",
-  "authorId": "ユーザーID",
-  "categoryId": "カテゴリーID",
-  "isPublic": true,
-  "tagIds": ["タグ1のID", "タグ2のID"]
-}
-```
-
-## データベース構造
-
-### 主要なモデル
-
-- `User` - ユーザー情報
-- `Document` - ドキュメント情報
-- `Category` - カテゴリー情報
-- `Tag` - タグ情報
-
-詳細なスキーマは `prisma/schema.prisma` を参照してください。
-
-## 開発
-
-### 新しいマイグレーションの作成
-
-```bash
-pnpm prisma migrate dev --name <migration-name>
-```
-
-### Prisma Clientの生成
-
-```bash
-pnpm prisma generate
-```
-
-### データベースの初期化
-
-```bash
-pnpm prisma migrate reset
