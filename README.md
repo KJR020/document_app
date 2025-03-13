@@ -1,36 +1,126 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Document Management Application
 
-## Getting Started
+Next.jsとPrismaを使用したドキュメント管理アプリケーション。
+データベース設計の検証を目的として簡易的な機能のみを実装。
 
-First, run the development server:
+## 技術スタック
+
+- **Frontend**: Next.js 15.1.7 (App Router)
+- **Styling**: Tailwind CSS
+- **ORM**: Prisma
+- **Database**: PostgreSQL 17 (Alpine)
+- **Package Manager**: pnpm
+- **開発環境**: Docker
+
+## 機能
+
+- ドキュメントの作成、読取、更新、削除（CRUD）
+- ドキュメントの一覧表示
+- カテゴリーとタグによる分類
+- 公開/非公開設定
+
+## セットアップ
+
+### 前提条件
+
+- Node.js
+- pnpm
+- Docker
+
+### インストール手順
+
+1. リポジトリのクローン：
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd document_app
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. 依存関係のインストール：
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. PostgreSQLコンテナの起動：
 
-## Learn More
+```bash
+docker compose up -d
+```
 
-To learn more about Next.js, take a look at the following resources:
+4. 環境変数の設定：
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+`.env`ファイルを作成し、以下の内容を設定：
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5433/postgres?schema=public"
+```
 
-## Deploy on Vercel
+5. データベースのマイグレーション：
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+pnpm prisma migrate dev
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+6. アプリケーションの起動：
+
+```bash
+pnpm dev
+```
+
+
+## API エンドポイント
+
+### ドキュメント管理
+
+- `GET /api/documents` - ドキュメント一覧の取得
+- `POST /api/documents` - 新規ドキュメントの作成
+- `GET /api/documents/[id]` - 特定のドキュメントの取得
+- `PUT /api/documents/[id]` - ドキュメントの更新
+- `DELETE /api/documents/[id]` - ドキュメントの削除
+
+### リクエスト例
+
+新規ドキュメントの作成：
+
+```json
+POST /api/documents
+{
+  "title": "サンプルドキュメント",
+  "content": "ドキュメントの内容",
+  "authorId": "ユーザーID",
+  "categoryId": "カテゴリーID",
+  "isPublic": true,
+  "tagIds": ["タグ1のID", "タグ2のID"]
+}
+```
+
+## データベース構造
+
+### 主要なモデル
+
+- `User` - ユーザー情報
+- `Document` - ドキュメント情報
+- `Category` - カテゴリー情報
+- `Tag` - タグ情報
+
+詳細なスキーマは `prisma/schema.prisma` を参照してください。
+
+## 開発
+
+### 新しいマイグレーションの作成
+
+```bash
+pnpm prisma migrate dev --name <migration-name>
+```
+
+### Prisma Clientの生成
+
+```bash
+pnpm prisma generate
+```
+
+### データベースの初期化
+
+```bash
+pnpm prisma migrate reset
