@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { getAdminUser } from "@/lib/auth";
 import { NextRequest } from "next/server";
 import { UpdateDocumentPayload } from "@/types/document";
 import { type Prisma, DocumentChange } from "@prisma/client";
@@ -9,7 +9,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await auth();
+    const user = await getAdminUser();
     if (!user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -24,6 +24,24 @@ export async function PUT(
     // Create a new document version
     const documentChange = await prisma.$transaction<DocumentChange>(
       async (tx) => {
+        // Get current version to get directory info
+        const currentVersion = await tx.currentDocumentVersion.findUnique({
+          where: { documentId },
+          include: { version: true },
+        });
+
+        // If no current version exists, get the document's first version
+        const latestVersion = currentVersion
+          ? currentVersion.version
+          : await tx.documentVersion.findFirst({
+              where: { documentId },
+              orderBy: { createdAt: "desc" },
+            });
+
+        if (!latestVersion) {
+          throw new Error("No document version found");
+        }
+
         // Create document change record
         const change = await tx.documentChange.create({
           data: {
@@ -40,6 +58,7 @@ export async function PUT(
             name: data.name,
             content: data.content,
             documentChangeId: change.id,
+            parentDirectoryId: latestVersion.parentDirectoryId, // Use the same directory as the previous version
           },
         });
 

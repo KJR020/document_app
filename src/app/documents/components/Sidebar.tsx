@@ -11,7 +11,7 @@ interface FileStructureItem {
   type: "file" | "folder";
   expanded?: boolean;
   children?: Record<string, FileStructureItem>;
-  directoryId?: number;
+  directoryId: number;
 }
 
 interface RenderItemProps {
@@ -23,7 +23,7 @@ interface RenderItemProps {
 type FileStructure = Record<string, FileStructureItem>;
 
 interface SidebarProps {
-  onDirectorySelect: (directoryId: number | null) => void;
+  onDirectorySelect: (directoryId: number) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ onDirectorySelect }) => {
@@ -31,14 +31,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onDirectorySelect }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [selectedDirectoryId, setSelectedDirectoryId] = useState<number | null>(
-    null
-  );
+  const [selectedDirectoryId, setSelectedDirectoryId] = useState<number>(1);
   const [currentPath, setCurrentPath] = useState<string[]>([]);
 
   useEffect(() => {
-    // 初期状態ではnullを渡してすべてのドキュメントを表示
-    onDirectorySelect(null);
+    onDirectorySelect(1);
     fetchDirectoryStructure();
   }, []);
 
@@ -121,7 +118,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDirectorySelect }) => {
     setFileStructure(updateStructure(fileStructure, pathParts));
   };
 
-  const RenderItem: React.FC<RenderItemProps & { directoryId?: number }> = ({
+  const RenderItem: React.FC<RenderItemProps & { directoryId: number }> = ({
     name,
     item,
     path,
@@ -138,14 +135,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onDirectorySelect }) => {
             }`}
             onClick={() => {
               toggleFolder(fullPath);
-              if (directoryId) {
-                setSelectedDirectoryId(
-                  directoryId === selectedDirectoryId ? null : directoryId
-                );
-                onDirectorySelect(
-                  directoryId === selectedDirectoryId ? null : directoryId
-                );
-              }
+              setSelectedDirectoryId(directoryId);
+              onDirectorySelect(directoryId);
             }}
           >
             <span className="ml-2 mr-1 flex-shrink-0">
@@ -213,10 +204,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onDirectorySelect }) => {
     }
   }, []);
 
-  const addNewDocument = () => {
-    console.log("Adding new document");
-  };
-
   const addNewFolder = () => {
     setIsCreateDialogOpen(true);
   };
@@ -232,13 +219,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onDirectorySelect }) => {
             title="新規フォルダ"
           >
             <LuFolder size={16} className="text-primary" />
-          </button>
-          <button
-            onClick={addNewDocument}
-            className="rounded p-1 hover:bg-surface-light"
-            title="新規ドキュメント"
-          >
-            <LuFile size={16} className="text-secondary" />
           </button>
         </div>
       </div>

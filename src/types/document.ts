@@ -34,3 +34,27 @@ export interface UpdateDocumentPayload {
   name: string;
   content: string;
 }
+
+export interface DocumentVersion {
+  id: number;
+  name: string;
+  content: string;
+  createdAt: Date;
+}
+
+export interface DocumentChange {
+  id: number;
+  changeType: string;
+  changedAt: Date;
+  changedBy: DocumentUser;
+  documentVersion?: DocumentVersion;
+}
+
+export interface DocumentHistory {
+  versions: DocumentVersion[];
+  changes: DocumentChange[];
+}
+
+export interface DocumentHistoryResponse {
+  history: DocumentHistory;
+}

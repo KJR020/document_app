@@ -1,6 +1,11 @@
-import { Document, UpdateDocumentPayload } from "@/types/document";
+import {
+  Document,
+  DocumentHistory,
+  UpdateDocumentPayload,
+} from "@/types/document";
 import { format } from "date-fns";
 import { useState } from "react";
+import { DocumentHistoryDialog } from "./DocumentHistoryDialog";
 import { useRouter } from "next/navigation";
 
 interface DocumentCardProps {
@@ -10,10 +15,27 @@ interface DocumentCardProps {
 export function DocumentCard({ document }: DocumentCardProps) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
+  const [isViewingHistory, setIsViewingHistory] = useState(false);
+  const [history, setHistory] = useState<DocumentHistory | null>(null);
   const [editForm, setEditForm] = useState<UpdateDocumentPayload>({
     name: document.name,
     content: document.content,
   });
+
+  const handleViewHistory = async () => {
+    try {
+      const response = await fetch(`/api/documents/${document.id}/history`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch document history");
+      }
+      const data = await response.json();
+      setHistory(data.history);
+      setIsViewingHistory(true);
+    } catch (error) {
+      console.error("Error fetching document history:", error);
+      alert("Failed to fetch document history");
+    }
+  };
 
   const handleEdit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +85,12 @@ export function DocumentCard({ document }: DocumentCardProps) {
             <span>{document.user.username}</span>
           </div>
           <div className="card-actions mt-4 justify-end">
-            <button className="btn btn-ghost btn-sm">View</button>
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={handleViewHistory}
+            >
+              View History
+            </button>
             <button
               className="btn btn-primary btn-sm"
               onClick={() => setIsEditing(true)}
@@ -73,6 +100,15 @@ export function DocumentCard({ document }: DocumentCardProps) {
           </div>
         </div>
       </div>
+
+      {/* History Modal */}
+      {history && (
+        <DocumentHistoryDialog
+          isOpen={isViewingHistory}
+          onClose={() => setIsViewingHistory(false)}
+          history={history}
+        />
+      )}
 
       {/* Edit Modal */}
       <dialog className={`modal ${isEditing ? "modal-open" : ""}`}>

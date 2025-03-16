@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { on } from "events";
 
 interface CreateDocumentFormProps {
   selectedDirectoryId: number | null;
+  onDocumentCreate: () => void;
 }
 
 export function CreateDocumentForm({
   selectedDirectoryId,
+  onDocumentCreate,
 }: CreateDocumentFormProps) {
   const router = useRouter();
   const [isCreating, setIsCreating] = useState(false);
@@ -36,8 +39,10 @@ export function CreateDocumentForm({
       setForm({ name: "", content: "" });
       setIsCreating(false);
       router.refresh();
+
+      onDocumentCreate();
     } catch (error) {
-      console.error("Error creating document:", error);
+      console.error("Error creating document:", error.message);
       alert("Failed to create document");
     }
   };
@@ -53,6 +58,7 @@ export function CreateDocumentForm({
           <h3 className="mb-4 text-lg font-bold text-neutral">
             Create Document
           </h3>
+          {selectedDirectoryId}
           <form onSubmit={handleSubmit}>
             <fieldset className="fieldset">
               <legend className="fieldset-legend">Title</legend>

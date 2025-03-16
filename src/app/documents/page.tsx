@@ -11,9 +11,8 @@ export default function DocumentsPage() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedDirectoryId, setSelectedDirectoryId] = useState<number | null>(
-    null
-  );
+  const [selectedDirectoryId, setSelectedDirectoryId] = useState<number>(1);
+
   const [selectedDirectoryName, setSelectedDirectoryName] =
     useState<string>("Documents");
 
@@ -28,6 +27,7 @@ export default function DocumentsPage() {
 
   async function fetchDirectoryInfo(directoryId: number) {
     try {
+      console.log("fetching directory info");
       const response = await fetch(`/api/directories/${directoryId}`);
       const data = await response.json();
       if (data.directory) {
@@ -86,10 +86,12 @@ export default function DocumentsPage() {
         <Panel>
           <div className="h-full overflow-auto p-4">
             <div className="mb-6 flex items-center justify-between">
-              <h1 className="text-2xl font-bold text-primary">
-                {selectedDirectoryName}
-              </h1>
-              <CreateDocumentForm selectedDirectoryId={selectedDirectoryId} />
+              <h1 className="text-2xl font-bold text-primary"></h1>
+              {selectedDirectoryId}
+              <CreateDocumentForm
+                selectedDirectoryId={selectedDirectoryId}
+                onDocumentCreate={() => fetchDocuments(selectedDirectoryId)}
+              />
             </div>
             <div className="grid grid-cols-3 gap-6 px-4 md:grid-cols-2 xl:grid-cols-3">
               {documents.map((doc) => (

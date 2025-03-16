@@ -2,14 +2,28 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { DocumentsApiResponse } from "@/types/document";
 
-export async function GET(): Promise<NextResponse<DocumentsApiResponse>> {
+export async function GET(
+  request: Request
+): Promise<NextResponse<DocumentsApiResponse>> {
   try {
-    const rawDocuments = await prisma.document.findMany({
-      where: {
-        currentVersion: {
-          isNot: null,
-        },
+    const { searchParams } = new URL(request.url);
+    const directoryId = searchParams.get("directoryId");
+
+    const where = {
+      currentVersion: {
+        isNot: null,
       },
+      ...(directoryId && {
+        currentVersion: {
+          version: {
+            parentDirectoryId: parseInt(directoryId),
+          },
+        },
+      }),
+    };
+
+    const rawDocuments = await prisma.document.findMany({
+      where,
       include: {
         currentVersion: {
           include: {
