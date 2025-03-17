@@ -22,6 +22,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDirectorySelect }) => {
   const [selectedDirectoryId, setSelectedDirectoryId] = useState<number>(1);
   const [directories, setDirectories] = useState<DirectoryInfo[]>([]);
   const [directoryToMove, setDirectoryToMove] = useState<number | null>(null);
+  const [descendantIds, setDescendantIds] = useState<number[]>([]);
 
   useEffect(() => {
     onDirectorySelect(1);
@@ -211,24 +212,41 @@ const Sidebar: React.FC<SidebarProps> = ({ onDirectorySelect }) => {
     onDirectorySelect(directoryId);
   };
 
-  const handleMoveClick = (directoryId: number) => {
+  const fetchDescendantIds = async (directoryId: number) => {
+    try {
+      const response = await fetch(`/api/directories/${directoryId}`, {
+        method: "GET",
+      });
+      const data = await response.json();
+      if (data.error) {
+        setError(data.error);
+        return [];
+      }
+      return (
+        data.descendants?.map(
+          (d: { descendantId: number }) => d.descendantId
+        ) || []
+      );
+    } catch (err) {
+      console.error("Error fetching descendants:", err);
+      return [];
+    }
+  };
+
+  const handleMoveClick = async (directoryId: number) => {
     setDirectoryToMove(directoryId);
-    const paths = collectDirectoryPaths(fileStructure);
-    setDirectories([
-      {
-        id: 1,
-        name: Object.keys(fileStructure)[0],
-        path: Object.keys(fileStructure)[0],
-      },
-      ...paths,
+    const [paths, descendants] = await Promise.all([
+      Promise.resolve(collectDirectoryPaths(fileStructure)),
+      fetchDescendantIds(directoryId),
     ]);
+    setDirectories(paths);
+    setDescendantIds(descendants);
     setIsMoveDialogOpen(true);
   };
 
   return (
     <div className="h-full w-full border-r bg-surface p-4">
       <SidebarHeader onAddFolder={() => setIsCreateDialogOpen(true)} />
-
       <div className="overflow-y-auto">
         {loading ? (
           <div className="flex items-center justify-center py-4">
@@ -258,6 +276,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDirectorySelect }) => {
         onMove={moveDirectory}
         directories={directories}
         currentDirectoryId={directoryToMove || 0}
+        descendantIds={descendantIds}
       />
     </div>
   );

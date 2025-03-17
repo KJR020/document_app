@@ -163,16 +163,26 @@ export async function GET(
     // paramsを解決
     const { id } = await context.params;
 
-    const directory = await prisma.directory.findUnique({
-      where: {
-        id: parseInt(id),
-      },
-      select: {
-        id: true,
-        name: true,
-        createdAt: true,
-      },
-    });
+    const [directory, descendants] = await Promise.all([
+      prisma.directory.findUnique({
+        where: {
+          id: parseInt(id),
+        },
+        select: {
+          id: true,
+          name: true,
+          createdAt: true,
+        },
+      }),
+      prisma.directoryHierarchy.findMany({
+        where: {
+          ancestorId: parseInt(id),
+        },
+        select: {
+          descendantId: true,
+        },
+      }),
+    ]);
 
     if (!directory) {
       return NextResponse.json(
@@ -181,7 +191,7 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ directory });
+    return NextResponse.json({ directory, descendants });
   } catch (error) {
     console.error("Error fetching directory:", error);
     return NextResponse.json(

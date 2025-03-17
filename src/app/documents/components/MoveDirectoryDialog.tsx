@@ -1,3 +1,4 @@
+import { dir } from "console";
 import React, { useState } from "react";
 
 interface MoveDirectoryDialogProps {
@@ -6,6 +7,7 @@ interface MoveDirectoryDialogProps {
   onMove: (targetDirectoryId: number) => Promise<void>;
   directories: { id: number; name: string; path: string }[];
   currentDirectoryId: number;
+  descendantIds: number[];
 }
 
 export const MoveDirectoryDialog: React.FC<MoveDirectoryDialogProps> = ({
@@ -14,6 +16,7 @@ export const MoveDirectoryDialog: React.FC<MoveDirectoryDialogProps> = ({
   onMove,
   directories,
   currentDirectoryId,
+  descendantIds,
 }) => {
   const [selectedDirectoryId, setSelectedDirectoryId] = useState<number | null>(
     null
@@ -24,6 +27,12 @@ export const MoveDirectoryDialog: React.FC<MoveDirectoryDialogProps> = ({
   const handleMove = async () => {
     if (!selectedDirectoryId) {
       setError("移動先のディレクトリを選択してください");
+      return;
+    }
+
+    // Prevent moving to root directory
+    if (selectedDirectoryId === 1) {
+      setError("ルートディレクトリには移動できません");
       return;
     }
 
@@ -44,7 +53,7 @@ export const MoveDirectoryDialog: React.FC<MoveDirectoryDialogProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-96 rounded-lg bg-surface p-6 shadow-xl">
+      <div className="w-96 rounded-lg bg-base-200 p-6 shadow-xl">
         <h3 className="mb-4 text-lg font-semibold text-neutral">
           ディレクトリを移動
         </h3>
@@ -57,7 +66,12 @@ export const MoveDirectoryDialog: React.FC<MoveDirectoryDialogProps> = ({
           >
             <option value="">選択してください</option>
             {directories
-              .filter((dir) => dir.id !== currentDirectoryId)
+              .filter(
+                (dir) =>
+                  dir.id !== currentDirectoryId &&
+                  !descendantIds.includes(dir.id) &&
+                  dir.id !== 1 // Exclude root directory
+              )
               .map((dir) => (
                 <option key={dir.id} value={dir.id}>
                   {dir.path}
