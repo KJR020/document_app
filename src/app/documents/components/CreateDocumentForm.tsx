@@ -42,7 +42,6 @@ export function CreateDocumentForm({
 
       onDocumentCreate();
     } catch (error) {
-      console.error("Error creating document:", error.message);
       alert("Failed to create document");
     }
   };

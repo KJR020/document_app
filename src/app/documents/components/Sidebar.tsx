@@ -1,11 +1,19 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { CreateDirectoryDialog } from "./CreateDirectoryDialog";
+import { MoveDirectoryDialog } from "./MoveDirectoryDialog";
 import {
   LuChevronDown,
   LuChevronRight,
   LuFile,
   LuFolder,
+  LuMove,
 } from "react-icons/lu";
+
+interface DirectoryInfo {
+  id: number;
+  name: string;
+  path: string;
+}
 
 interface FileStructureItem {
   type: "file" | "folder";
@@ -31,13 +39,45 @@ const Sidebar: React.FC<SidebarProps> = ({ onDirectorySelect }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
   const [selectedDirectoryId, setSelectedDirectoryId] = useState<number>(1);
   const [currentPath, setCurrentPath] = useState<string[]>([]);
+  const [directories, setDirectories] = useState<DirectoryInfo[]>([]);
+  const [directoryToMove, setDirectoryToMove] = useState<number | null>(null);
 
   useEffect(() => {
     onDirectorySelect(1);
     fetchDirectoryStructure();
   }, []);
+
+  const getDirectoryPath = (
+    name: string,
+    item: FileStructureItem,
+    parentPath = ""
+  ): string => {
+    const fullPath = parentPath ? `${parentPath}/${name}` : name;
+    return fullPath;
+  };
+
+  const collectDirectoryPaths = (
+    structure: FileStructure,
+    parentPath = "",
+    paths: DirectoryInfo[] = []
+  ): DirectoryInfo[] => {
+    Object.entries(structure).forEach(([name, item]) => {
+      if (item.type === "folder") {
+        const fullPath = getDirectoryPath(name, item, parentPath);
+        if (item.directoryId !== directoryToMove) {
+          // Don't include the directory being moved
+          paths.push({ id: item.directoryId, name, path: fullPath });
+        }
+        if (item.children) {
+          collectDirectoryPaths(item.children, fullPath, paths);
+        }
+      }
+    });
+    return paths;
+  };
 
   async function fetchDirectoryStructure() {
     try {
@@ -74,9 +114,22 @@ const Sidebar: React.FC<SidebarProps> = ({ onDirectorySelect }) => {
       };
 
       if (data.directory) {
-        setFileStructure({
+        // Get root directory path first
+        const rootPath = {
+          id: data.directory.id,
+          name: data.directory.name,
+          path: data.directory.name,
+        };
+
+        const structure = {
           [data.directory.name]: transformToFileStructure(data.directory),
-        });
+        };
+        setFileStructure(structure);
+
+        // Update directory paths for move dialog
+        const paths = [rootPath, ...collectDirectoryPaths(structure)];
+        console.log("Available directories:", paths); // For debugging
+        setDirectories(paths);
       }
     } catch (err) {
       setError("Failed to fetch directory structure");
@@ -150,6 +203,29 @@ const Sidebar: React.FC<SidebarProps> = ({ onDirectorySelect }) => {
             <span className="ml-1 min-w-0 flex-1 truncate text-neutral">
               {name}
             </span>
+            {directoryId !== 1 && ( // Hide move button for root directory (ID: 1)
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDirectoryToMove(directoryId);
+                  // Update available directories when opening move dialog
+                  const paths = collectDirectoryPaths(fileStructure);
+                  setDirectories([
+                    {
+                      id: 1, // Root directory
+                      name: Object.keys(fileStructure)[0],
+                      path: Object.keys(fileStructure)[0],
+                    },
+                    ...paths,
+                  ]);
+                  setIsMoveDialogOpen(true);
+                }}
+                className="mr-2 rounded p-1 hover:bg-surface-dark"
+                title="移動"
+              >
+                <LuMove size={16} className="text-primary" />
+              </button>
+            )}
           </div>
 
           {item.expanded && (
@@ -204,6 +280,36 @@ const Sidebar: React.FC<SidebarProps> = ({ onDirectorySelect }) => {
     }
   }, []);
 
+  const moveDirectory = useCallback(
+    async (toDirectoryId: number) => {
+      if (!directoryToMove) return;
+
+      try {
+        const response = await fetch(`/api/directories/${directoryToMove}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ toDirectoryId }),
+        });
+
+        const data = await response.json();
+        if (data.error) {
+          setError(data.error);
+          return;
+        }
+
+        await fetchDirectoryStructure();
+        setIsMoveDialogOpen(false);
+        setDirectoryToMove(null);
+      } catch (err) {
+        setError("Failed to move directory");
+        console.error("Error moving directory:", err);
+      }
+    },
+    [directoryToMove]
+  );
+
   const addNewFolder = () => {
     setIsCreateDialogOpen(true);
   };
@@ -249,6 +355,13 @@ const Sidebar: React.FC<SidebarProps> = ({ onDirectorySelect }) => {
         isOpen={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
         onSubmit={createDirectory}
+      />
+      <MoveDirectoryDialog
+        isOpen={isMoveDialogOpen}
+        onClose={() => setIsMoveDialogOpen(false)}
+        onMove={moveDirectory}
+        directories={directories}
+        currentDirectoryId={directoryToMove || 0}
       />
     </div>
   );
