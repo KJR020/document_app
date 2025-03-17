@@ -35,11 +35,13 @@ const DirectoryMoveSchema = z.object({
 // Move directory endpoint
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     const user = await getAdminUser();
     const body = await request.json();
+
+    const { id } = await context.params;
 
     // Validate request body
     const result = DirectoryMoveSchema.safeParse(body);
@@ -53,7 +55,7 @@ export async function PATCH(
       );
     }
 
-    const targetId = parseInt(params.id);
+    const targetId = parseInt(id);
     const toId = result.data.toDirectoryId;
 
     // Prevent moving root directory
@@ -153,14 +155,17 @@ export async function PATCH(
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     await getAdminUser();
 
+    // paramsを解決
+    const { id } = await context.params;
+
     const directory = await prisma.directory.findUnique({
       where: {
-        id: parseInt(params.id),
+        id: parseInt(id),
       },
       select: {
         id: true,
