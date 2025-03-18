@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { IconBase } from "react-icons";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface HeaderProps {
   title?: string;
@@ -10,17 +11,17 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ title = "Document App" }) => {
   return (
-    <header className="border-b bg-base-100 border-base-400 sticky top-0 z-10 shadow-sm">
-      <div className="mx-auto max-w-7xl py-2 flex justify-between items-center ">
+    <header className="border-base-400 sticky top-0 z-10 border-b bg-base-100 shadow-sm">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2">
         <Link href="/">
-          <h1 className="text-2xl font-bold tracking-tight text-primary cursor-pointer">
+          <h1 className="cursor-pointer text-2xl font-bold tracking-tight text-primary">
             {title}
           </h1>
         </Link>
-        <nav className="flex space-x-4">
+        <nav className="flex items-center space-x-4">
           <Link
             href="/documents"
-            className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+            className="rounded-md px-3 py-2 text-sm font-medium text-base-content hover:text-primary"
           >
             Documents
           </Link>
@@ -28,9 +29,10 @@ const Header: React.FC<HeaderProps> = ({ title = "Document App" }) => {
             <input
               type="text"
               placeholder="Search..."
-              className="border border-gray-300 rounded-md p-1"
+              className="rounded-md border border-base-300 bg-base-100 p-1 text-base-content"
             />
           </search>
+          <ThemeToggle />
         </nav>
       </div>
     </header>
