@@ -6,7 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "npx playwright test",
+    "test:debug": "npx playwright test --debug",
+    "test:ui": "npx playwright test --ui"
   },
   "dependencies": {
     "@prisma/client": "^6.4.1",
@@ -20,6 +23,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.51.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
