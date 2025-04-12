@@ -25,9 +25,9 @@ export const CreateDirectoryDialog = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-base-100 p-6 rounded-lg shadow-xl w-96">
-        <h3 className="text-lg font-semibold mb-4 text-neutral">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="w-96 rounded-lg bg-base-100 p-6 shadow-xl">
+        <h3 className="mb-4 text-lg font-semibold text-neutral">
           新規フォルダ
         </h3>
         <form onSubmit={handleSubmit}>
@@ -36,21 +36,21 @@ export const CreateDirectoryDialog = ({
             value={directoryName}
             onChange={(e) => setDirectoryName(e.target.value)}
             placeholder="フォルダ名"
-            className="w-full p-2 border rounded mb-4 bg-surface focus:outline-none focus:ring-2 focus:ring-primary text-neutral"
+            className="mb-4 w-full rounded border bg-surface p-2 text-neutral focus:outline-none focus:ring-2 focus:ring-primary"
             autoFocus
           />
           <div className="flex justify-end space-x-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 hover:bg-surface-light rounded btn"
+              className="btn rounded px-4 py-2 hover:bg-surface-light"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={!directoryName.trim()}
-              className="px-4 py-2 btn btn-primary  rounded hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="hover:bg-primary/90 btn btn-primary rounded px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Create
             </button>

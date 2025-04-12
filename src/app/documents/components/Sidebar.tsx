@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+
 import { CreateDirectoryDialog } from "./CreateDirectoryDialog";
 import { MoveDirectoryDialog } from "./MoveDirectoryDialog";
-import type {
-  FileStructure,
-  DirectoryInfo,
-  FileStructureItem,
-} from "./sidebar/types";
 import DirectoryTree from "./sidebar/DirectoryTree";
 import SidebarHeader from "./sidebar/SidebarHeader";
+import type {
+  DirectoryInfo,
+  FileStructure,
+  FileStructureItem,
+} from "./sidebar/types";
 
 interface SidebarProps {
   onDirectorySelect: (directoryId: number) => void;

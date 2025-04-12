@@ -1,15 +1,14 @@
-import { getAdminUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
+
+import { getAdminUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { DocumentChange, DocumentHistoryResponse } from "@/types/document";
+import { DocumentHistoryResponse } from "@/types/document";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await getAdminUser();
-
     const documentId = parseInt(params.id, 10);
     if (isNaN(documentId)) {
       return NextResponse.json(

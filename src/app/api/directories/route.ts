@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+
 import { getAdminUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 interface DirectoryNode {
   id: number;
@@ -126,7 +127,7 @@ export async function GET() {
     const admin = await getAdminUser();
 
     // Find or create root directory if it doesn't exist
-    let rootDirectory = await prisma.directory.findFirst({
+    const rootDirectory = await prisma.directory.findFirst({
       where: {
         name: "root",
         createdBy: admin.id,

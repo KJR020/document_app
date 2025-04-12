@@ -1,8 +1,10 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getAdminUser } from "@/lib/auth";
+import type { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { NextResponse } from "next/server";
 import { z } from "zod";
+
+import { getAdminUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 // Helper function to check if move is valid
 async function isValidMove(targetId: number, toId: number): Promise<boolean> {
@@ -21,7 +23,9 @@ async function isValidMove(targetId: number, toId: number): Promise<boolean> {
     },
   });
 
-  return !descendants.some((d) => d.descendantId === toId);
+  return !descendants.some(
+    (d: { descendantId: number }) => d.descendantId === toId
+  );
 }
 
 // Validation schema for directory move
@@ -35,13 +39,13 @@ const DirectoryMoveSchema = z.object({
 // Move directory endpoint
 export async function PATCH(
   request: Request,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     const user = await getAdminUser();
     const body = await request.json();
 
-    const { id } = await context.params;
+    const { id } = params;
 
     // Validate request body
     const result = DirectoryMoveSchema.safeParse(body);
@@ -111,7 +115,7 @@ export async function PATCH(
     }
 
     // Start transaction
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Remove old hierarchy entries
       await tx.directoryHierarchy.deleteMany({
         where: {
@@ -155,13 +159,13 @@ export async function PATCH(
 
 export async function GET(
   request: Request,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     await getAdminUser();
 
     // paramsを解決
-    const { id } = await context.params;
+    const { id } = params;
 
     const [directory, descendants] = await Promise.all([
       prisma.directory.findUnique({

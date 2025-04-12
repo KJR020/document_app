@@ -4,6 +4,7 @@ import {
   LuFolder,
   LuMove,
 } from "react-icons/lu";
+
 import FileItem from "./FileItem";
 import { FileStructureItem } from "./types";
 

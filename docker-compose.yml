@@ -2,9 +2,9 @@ services:
   db:
     image: postgres:17-alpine
     environment:
-      POSTGRES_DB: postgres 
-      POSTGRES_USER: postgres 
-      POSTGRES_PASSWORD: postgres 
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
       LANG: ja_JP.UTF-8
       LANGUAGE: ja_JP.UTF-8
       LC_ALL: ja_JP.UTF-8

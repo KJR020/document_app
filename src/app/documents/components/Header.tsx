@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
+import React from "react";
 import { IconBase } from "react-icons";
+
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface HeaderProps {

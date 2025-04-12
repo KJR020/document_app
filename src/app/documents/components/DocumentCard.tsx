@@ -1,12 +1,14 @@
+import { format } from "date-fns";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
 import {
   Document,
   DocumentHistory,
   UpdateDocumentPayload,
 } from "@/types/document";
-import { format } from "date-fns";
-import { useState } from "react";
+
 import { DocumentHistoryDialog } from "./DocumentHistoryDialog";
-import { useRouter } from "next/navigation";
 
 interface DocumentCardProps {
   document: Document;

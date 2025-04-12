@@ -1,5 +1,5 @@
-import { FileStructure } from "./types";
 import FolderItem from "./FolderItem";
+import { FileStructure } from "./types";
 
 interface DirectoryTreeProps {
   fileStructure: FileStructure;

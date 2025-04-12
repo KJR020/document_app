@@ -24,14 +24,14 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <h1 className="text-4xl font-bold mb-8">Document Management System</h1>
+      <h1 className="mb-8 text-4xl font-bold">Document Management System</h1>
       <div className="max-w-2xl text-center">
-        <p className="text-xl mb-8">
+        <p className="mb-8 text-xl">
           Store, organize, and manage your documents efficiently.
         </p>
         <Link
           href="/documents"
-          className="btn btn-primary  py-3 px-6 transition-colors"
+          className="btn btn-primary px-6 py-3 transition-colors"
         >
           View Documents
         </Link>

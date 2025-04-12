@@ -1,8 +1,9 @@
-import { prisma } from "@/lib/prisma";
-import { getAdminUser } from "@/lib/auth";
+import { Prisma } from "@prisma/client";
 import { NextRequest } from "next/server";
+
+import { getAdminUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { UpdateDocumentPayload } from "@/types/document";
-import { type Prisma, DocumentChange } from "@prisma/client";
 
 export async function PUT(
   request: NextRequest,
@@ -22,8 +23,8 @@ export async function PUT(
     const data = (await request.json()) as UpdateDocumentPayload;
 
     // Create a new document version
-    const documentChange = await prisma.$transaction<DocumentChange>(
-      async (tx) => {
+    const documentChange = await prisma.$transaction(
+      async (tx: Prisma.TransactionClient) => {
         // Get current version to get directory info
         const currentVersion = await tx.currentDocumentVersion.findUnique({
           where: { documentId },
@@ -58,7 +59,8 @@ export async function PUT(
             name: data.name,
             content: data.content,
             documentChangeId: change.id,
-            parentDirectoryId: latestVersion.parentDirectoryId, // Use the same directory as the previous version
+            // Use the same directory as the previous version
+            parentDirectoryId: latestVersion.parentDirectoryId,
           },
         });
 

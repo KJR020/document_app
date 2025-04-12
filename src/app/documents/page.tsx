@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CreateDocumentForm } from "@/app/documents/components/CreateDocumentForm";
-import { Document } from "@/types/document";
-import { DocumentCard } from "@/app/documents/components/DocumentCard";
-import Sidebar from "./components/Sidebar";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+
+import { CreateDocumentForm } from "@/app/documents/components/CreateDocumentForm";
+import { DocumentCard } from "@/app/documents/components/DocumentCard";
+import { Document } from "@/types/document";
+
+import Sidebar from "./components/Sidebar";
 
 export default function DocumentsPage() {
   const [documents, setDocuments] = useState<Document[]>([]);

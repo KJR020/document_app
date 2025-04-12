@@ -1,5 +1,6 @@
-import { DocumentHistory } from "@/types/document";
 import { format } from "date-fns";
+
+import { DocumentHistory } from "@/types/document";
 
 interface DocumentHistoryDialogProps {
   isOpen: boolean;
